@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garlic AI Workflow Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+        }
+        .step.active {
+            font-weight: bold;
+            color: #667eea;
+        }
+        .step.completed::before {
+            content: "✅ ";
+        }
+        .step.active::before {
+            content: "🟡 ";
+        }
+        .step::before {
+            content: "⚪️ ";
+        }
+        .step-content {
+            min-height: 400px;
+            padding: 30px;
+        }
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover {
+            background: #f0f0f0;
+            border-color: #764ba2;
+        }
+        .upload-area.dragover {
+            background: #e8e8ff;
+            border-color: #764ba2;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px;
+        }
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .image-preview {
+            max-width: 100%;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .message.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .feedback-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .feedback-buttons button {
+            flex: 1;
+            max-width: 200px;
+        }
+        .hidden {
+            display: none;
+        }
+        #cameraInput {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧄 Garlic AI Workflow Dashboard</h1>
+        <p class="subtitle">Guide your garlic images through the AI detection pipeline.</p>
+        
+        <div class="step-indicator">
+            <div class="step" id="step1-indicator">1. Capture or Upload</div>
+            <div class="step" id="step2-indicator">2. Send to AI</div>
+            <div class="step" id="step3-indicator">3. Review Result</div>
+            <div class="step" id="step4-indicator">4. Provide Feedback</div>
+        </div>
+
+        <div class="step-content">
+            <!-- Step 1: Upload -->
+            <div id="step1" class="step-panel">
+                <h2>Step 1 · Capture or upload a garlic image</h2>
+                <p>Use your camera or upload an existing picture of garlic for the AI to inspect.</p>
+                
+                <div style="margin: 20px 0;">
+                    <input type="file" id="fileInput" accept="image/*" capture="environment">
+                    <label for="fileInput">
+                        <div class="upload-area" id="uploadArea">
+                            <p>📷 Click to capture or upload image</p>
+                            <p style="font-size: 14px; color: #666;">or drag and drop here</p>
+                        </div>
+                    </label>
+                </div>
+
+                <div id="imagePreviewContainer" class="hidden">
+                    <img id="imagePreview" class="image-preview" alt="Preview">
+                    <button onclick="uploadImage()">Send to AI</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Processing -->
+            <div id="step2" class="step-panel hidden">
+                <h2>Step 2 · Send to the AI model</h2>
+                <p>We are processing your image. This may take a few seconds.</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill">0%</div>
+                </div>
+                <div id="step2Message"></div>
+            </div>
+
+            <!-- Step 3: Results -->
+            <div id="step3" class="step-panel hidden">
+                <h2>Step 3 · Review the AI output</h2>
+                <div id="annotatedImageContainer"></div>
+                <button onclick="goToStep4()">Continue to Feedback</button>
+            </div>
+
+            <!-- Step 4: Feedback -->
+            <div id="step4" class="step-panel hidden">
+                <h2>Step 4 · Provide feedback</h2>
+                <div id="annotatedImageContainer2"></div>
+                <div class="feedback-buttons">
+                    <button onclick="submitFeedback('accept')" style="background: #28a745;">✅ Accept</button>
+                    <button onclick="submitFeedback('reject')" style="background: #dc3545;">❌ Reject & Reprocess</button>
+                </div>
+                <div id="feedbackMessage"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000' 
+            : 'https://your-backend-url.railway.app';
+        
+        let currentStep = 1;
+        let imageId = null;
+        let imageFile = null;
+        let rejectCount = 0;
+
+        // File input handling
+        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+        const uploadArea = document.getElementById('uploadArea');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        }
+
+        function handleFile(file) {
+            imageFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('imagePreviewContainer').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function uploadImage() {
+            if (!imageFile) return;
+            
+            const formData = new FormData();
+            formData.append('file', imageFile);
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) throw new Error('Upload failed');
+                
+                const data = await response.json();
+                imageId = data.image_id;
+                goToStep(2);
+                processImage();
+            } catch (error) {
+                showMessage('step2Message', `Upload failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function processImage() {
+            // Animate progress bar
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 5;
+                if (progress > 90) progress = 90;
+                document.getElementById('progressFill').style.width = progress + '%';
+                document.getElementById('progressFill').textContent = progress + '%';
+            }, 200);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/process/${imageId}`, {
+                    method: 'POST'
+                });
+                
+                clearInterval(interval);
+                document.getElementById('progressFill').style.width = '100%';
+                document.getElementById('progressFill').textContent = '100%';
+                
+                if (!response.ok) throw new Error('Processing failed');
+                
+                const data = await response.json();
+                showMessage('step2Message', 'Processing finished. Moving to results.', 'success');
+                setTimeout(() => goToStep(3), 1000);
+            } catch (error) {
+                clearInterval(interval);
+                showMessage('step2Message', `Processing failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function goToStep4() {
+            goToStep(4);
+            await loadAnnotatedImage();
+        }
+
+        async function loadAnnotatedImage() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/result/${imageId}`);
+                if (!response.ok) throw new Error('Failed to load result');
+                
+                const data = await response.json();
+                const img = document.createElement('img');
+                img.src = 'data:image/png;base64,' + data.annotated_image_base64;
+                img.className = 'image-preview';
+                
+                document.getElementById('annotatedImageContainer').innerHTML = '';
+                document.getElementById('annotatedImageContainer').appendChild(img);
+                
+                document.getElementById('annotatedImageContainer2').innerHTML = '';
+                document.getElementById('annotatedImageContainer2').appendChild(img.cloneNode());
+            } catch (error) {
+                showMessage('feedbackMessage', `Error loading result: ${error.message}`, 'error');
+            }
+        }
+
+        async function submitFeedback(decision) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/feedback`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image_id: imageId,
+                        decision: decision
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Feedback submission failed');
+                
+                const data = await response.json();
+                rejectCount = data.reject_count;
+                
+                if (decision === 'accept') {
+                    showMessage('feedbackMessage', data.message || 'Thanks for your confirmation!', 'success');
+                    setTimeout(() => resetToStep1(), 2000);
+                } else {
+                    if (data.action === 'reset') {
+                        showMessage('feedbackMessage', data.message, 'warning');
+                        setTimeout(() => resetToStep1(), 3000);
+                    } else {
+                        showMessage('feedbackMessage', data.message || 'We will reprocess this image for you.', 'info');
+                        setTimeout(() => goToStep(2), 2000);
+                    }
+                }
+            } catch (error) {
+                showMessage('feedbackMessage', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        function goToStep(step) {
+            currentStep = step;
+            
+            // Hide all panels
+            document.querySelectorAll('.step-panel').forEach(p => p.classList.add('hidden'));
+            
+            // Show current panel
+            document.getElementById(`step${step}`).classList.remove('hidden');
+            
+            // Update indicators
+            document.querySelectorAll('.step').forEach((s, i) => {
+                s.classList.remove('active', 'completed');
+                if (i + 1 < step) {
+                    s.classList.add('completed');
+                } else if (i + 1 === step) {
+                    s.classList.add('active');
+                }
+            });
+            
+            // Load results in step 3
+            if (step === 3) {
+                loadAnnotatedImage();
+            }
+        }
+
+        function resetToStep1() {
+            currentStep = 1;
+            imageId = null;
+            imageFile = null;
+            rejectCount = 0;
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+            document.getElementById('fileInput').value = '';
+            goToStep(1);
+        }
+
+        function showMessage(containerId, message, type) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="message ${type}">${message}</div>`;
+        }
+
+        // Initialize
+        goToStep(1);
+    </script>
+</body>
+</html>
+

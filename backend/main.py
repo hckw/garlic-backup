@@ -66,12 +66,17 @@ detector = GarlicDetector(
     confidence_threshold=float(os.getenv("GARLIC_CONFIDENCE_THRESHOLD", "0.5")),
 )
 
+# CORS configuration - update with your Netlify domain in production
+allowed_origins = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost:3000,http://localhost:8080,http://localhost:8501"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins + ["*"] if os.getenv("ENVIRONMENT") == "development" else allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"]
-    ,
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -184,11 +189,18 @@ def _annotate_with_detections(original_path: Path, annotated_path: Path, detecti
         confidence = detection["confidence"] * 100
         text = f"{label} {confidence:.1f}%"
         text_bbox = draw.textbbox((0, 0), text, font=font)
+        text_height = text_bbox[3] - text_bbox[1]
+        text_width = text_bbox[2] - text_bbox[0]
+        
+        # Calculate background coordinates, ensuring y1 >= y0
+        y0 = max(0, coords[1] - text_height - 6)
+        y1 = max(y0 + text_height + 4, coords[1] - 2)
+        
         bg_coords = [
             coords[0],
-            max(0, coords[1] - (text_bbox[3] - text_bbox[1]) - 6),
-            coords[0] + (text_bbox[2] - text_bbox[0]) + 12,
-            coords[1] - 2,
+            y0,
+            coords[0] + text_width + 12,
+            y1,
         ]
         draw.rectangle(bg_coords, fill=(15, 23, 42, 200))
         draw.text((bg_coords[0] + 6, bg_coords[1] + 2), text, font=font, fill=(255, 255, 255))

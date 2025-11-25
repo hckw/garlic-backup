@@ -44,19 +44,19 @@ class GarlicDetector:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.confidence_threshold = confidence_threshold
         self.label_map = label_map or {1: "garlic_root"}
-        self.model = self._build_model(num_classes=len(self.label_map) + 1, weights_path=weights_path)
-        if weights_path:
-            self._load_weights(weights_path)
+        # Always build with pretrained weights first, then load custom weights if available
+        self.model = self._build_model(num_classes=len(self.label_map) + 1, use_pretrained=True)
+        if weights_path and Path(weights_path).exists():
+            try:
+                self._load_weights(weights_path)
+            except Exception as e:
+                print(f"Warning: Could not load weights from {weights_path}: {e}. Using pretrained model.")
         self.model.to(self.device)
         self.model.eval()
         self.transform = transforms.Compose([transforms.ToTensor()])
 
-    def _build_model(self, num_classes: int, weights_path: Optional[str]):
-        weights = (
-            None
-            if weights_path
-            else FasterRCNN_ResNet50_FPN_Weights.DEFAULT
-        )
+    def _build_model(self, num_classes: int, use_pretrained: bool = True):
+        weights = FasterRCNN_ResNet50_FPN_Weights.DEFAULT if use_pretrained else None
         model = fasterrcnn_resnet50_fpn(weights=weights)
         in_features = model.roi_heads.box_predictor.cls_score.in_features
         model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)

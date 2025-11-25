@@ -1,7 +1,8 @@
 # Netlify configuration
 [build]
   publish = "frontend/static"
-  command = "mkdir -p frontend/static"
+  command = "echo 'Static site - no build needed'"
+  ignore = "requirements.txt|runtime.txt|backend/|*.py"
 
 # Redirect API calls to your backend (update with your actual backend URL)
 [[redirects]]
@@ -18,4 +19,5 @@
 
 [build.environment]
   NODE_VERSION = "18"
+  PYTHON_VERSION = ""
 

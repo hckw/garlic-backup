@@ -1,7 +1,7 @@
 # Netlify configuration
 [build]
   publish = "frontend/static"
-  command = "echo 'Static site - no build needed'"
+  command = "./netlify-build.sh"
 
 # Redirect API calls to your backend (update with your actual backend URL)
 [[redirects]]

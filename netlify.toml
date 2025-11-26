@@ -2,6 +2,8 @@
 [build]
   publish = "frontend/static"
   command = "./netlify-build.sh"
+  # Skip Python dependency installation
+  ignore = "runtime.txt|requirements.txt|backend/|*.py"
 
 # Redirect API calls to your backend (update with your actual backend URL)
 [[redirects]]
@@ -18,5 +20,7 @@
 
 [build.environment]
   NODE_VERSION = "18"
+  # Explicitly disable Python
+  MISE_PYTHON_DISABLE = "1"
   PYTHON_VERSION = ""
 

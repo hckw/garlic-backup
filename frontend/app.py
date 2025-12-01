@@ -9,6 +9,9 @@ import requests
 import streamlit as st
 
 
+# Get API URL from environment variable
+# For local development: defaults to http://localhost:8000
+# For production: MUST be set to your Railway backend URL in Streamlit Cloud settings
 API_BASE_URL = os.getenv("GARLIC_API_URL", "http://localhost:8000")
 
 

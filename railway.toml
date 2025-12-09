@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "pip install -r requirements-backend.txt"
+buildCommand = "PIP_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu PIP_NO_CACHE_DIR=1 pip install --upgrade pip && PIP_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu PIP_NO_CACHE_DIR=1 pip install --no-cache-dir -r requirements-backend.txt"
 
 [deploy]
 startCommand = "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"

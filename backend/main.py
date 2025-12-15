@@ -293,14 +293,15 @@ async def submit_feedback(payload: FeedbackRequest):
     new_reject_count = record.reject_count + 1
     store.update(payload.image_id, reject_count=new_reject_count)
 
-    if new_reject_count > 5:
+    # Limit to 3 reprocess attempts; after that, require a new image
+    if new_reject_count > 3:
         store.update(payload.image_id, status="needs_new_image")
         return FeedbackResponse(
             image_id=payload.image_id,
             action="reset",
             reject_count=new_reject_count,
             message=(
-                "You’ve rejected this image more than 5 times. It may be unsuitable for detection. "
+                "You’ve rejected this image more than 3 times. It may be unsuitable for detection. "
                 "Please upload a clearer image."
             ),
         )
